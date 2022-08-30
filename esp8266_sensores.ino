@@ -8,7 +8,7 @@
 
 // Wifi
 const char* ssid = "TP-LINK_1456";       // Wi-Fi name
-const char* password = "85265998";   // Wi-Fi password
+const char* password = "";   // Wi-Fi password
     
 // MQTT Broker
 const char* mqtt_server = "192.168.0.107";
@@ -97,9 +97,9 @@ void reconnect() {
   }
 }
 
-void Heading_loop() //Below gives heading data in Serial Monitor, uncomment in loop() to use
-{
-
+//Below gives heading data in Serial Monitor
+void read_cmps11(){
+  
   Wire.beginTransmission(CMPS11_ADDRESS);  //starts communication with CMPS11
   Wire.write(ANGLE_8);                     //Sends the register we wish to start reading from
   Wire.endTransmission();
@@ -135,55 +135,21 @@ void Heading_loop() //Below gives heading data in Serial Monitor, uncomment in l
   (String(curr_roll) + "," + String(curr_pitch) + "," + String(curr_angle)).toCharArray(msg, 20);
   MQTT.publish("/gyro", msg);
     
-  Serial.print("roll: ");               // Display roll data
+  Serial.print("roll: "); // Display roll data
   Serial.print(curr_roll);
   
-  Serial.print("    pitch: ");          // Display pitch data
+  Serial.print("    pitch: "); // Display pitch data
   Serial.print(curr_pitch);
   
-  Serial.print("    YAW: ");     // Display 16 bit angle with decimal place
+  Serial.print("    YAW: "); // Display 16 bit angle with decimal place
   Serial.println(curr_angle);
   
    
-  delay(100);                           // Short delay before next loop,(100) 10hz update
+  delay(100); // Short delay before next loop,(100) 10hz update
 }
 
-void calibrate()//Below used to do manual mag/accel calibration, uncomment in setup to use
-{
-
-  Serial.println(" Calibration Mode ");
-  delay(2000);  //2 second before starting
-  Serial.println(" Start ");
-
-  Wire.beginTransmission(CMPS11_ADDRESS);
-  Wire.write(0); //command register
-  Wire.write(0xF0);
-  Wire.endTransmission();
-  delay(25);
-
-  Wire.beginTransmission(CMPS11_ADDRESS);
-  Wire.write(0); //command register
-  Wire.write(0xF5);
-  Wire.endTransmission();
-  delay(25);
-
-  Wire.beginTransmission(CMPS11_ADDRESS);
-  Wire.write(0); //command register
-  Wire.write(0xF6);
-  Wire.endTransmission();
-
-  delay(180000);//(ms)Alter this to allow enough time for you to calibrate Mag and Accel
-
-  Wire.beginTransmission(CMPS11_ADDRESS);
-  Wire.write(0); //command register
-  Wire.write(0xF8);
-  Wire.endTransmission();
-  Serial.println(" done ");
-  
-}
-
-void default_calibrate()//Below resets factory default cailbration, to use uncomment in setup loop
-{
+//Below resets factory default cailbration
+void calibrate_cmps11(){
 
   Serial.println(" Default Calibration Mode ");
   delay(2000);  //2 second before starting
@@ -205,18 +171,17 @@ void default_calibrate()//Below resets factory default cailbration, to use uncom
   Wire.write(0); //command register
   Wire.write(0xb1);
   Wire.endTransmission();
-
  
   Serial.println("done");
-
 }
 
 
 void setup() {
+  
   Serial.begin(9600);
 
-  Wire.begin();
-  default_calibrate();// Uncomment this line to reset IMU back to default cal data, uncomment only 1
+  Wire.begin(); // I2C library
+  calibrate_cmps11();
   setup_wifi();
 
   delay(100);
@@ -230,13 +195,8 @@ void loop() {
   if (!MQTT.connected()) {
         reconnect(); //se não há conexão com o Broker, a conexão é refeita
   }
+  
   reconectWiFi();
-
-  // CODE HERE
-  Heading_loop();// Comment out to do either Cal modes, uncomment  to display heading, uncomment only 1
-
-  //char msg[8] = "Cenas";
-  //MQTT.publish("/gyro", msg);
-
+  read_cmps11();
   MQTT.loop();
 }
