@@ -8,7 +8,7 @@
 
 // Wifi
 const char* ssid = "TP-LINK_1456";       // Wi-Fi name
-const char* password = "";   // Wi-Fi password
+const char* password = "85265998";   // Wi-Fi password
     
 // MQTT Broker
 const char* mqtt_server = "192.168.0.107";
@@ -121,17 +121,19 @@ void read_cmps11(){
   angle16 <<= 8;
   angle16 += low_byte;
   
-  float curr_angle = (String(int(angle16/10)) + "." +  String(angle16%10)).toFloat();
-  int curr_roll = int(roll);
+  int curr_angle = /*(String(int(angle16/10)) + "." +  String(angle16%10)).toFloat();*/ int(angle8) ;
   int curr_pitch = int(pitch);
+  int curr_roll = int(roll);
 
   char msg[20];
+  
   if(curr_roll > 177){
     curr_roll = curr_roll - 256;
   }
   if(curr_pitch > 177){
     curr_pitch = curr_pitch - 256;
   }
+  
   (String(curr_roll) + "," + String(curr_pitch) + "," + String(curr_angle)).toCharArray(msg, 20);
   MQTT.publish("/gyro", msg);
     
@@ -141,7 +143,7 @@ void read_cmps11(){
   Serial.print("    pitch: "); // Display pitch data
   Serial.print(curr_pitch);
   
-  Serial.print("    YAW: "); // Display 16 bit angle with decimal place
+  Serial.print("    Bearing: "); // Display 16 bit angle with decimal place
   Serial.println(curr_angle);
   
    
@@ -157,19 +159,19 @@ void calibrate_cmps11(){
 
   Wire.beginTransmission(CMPS11_ADDRESS);
   Wire.write(0); //command register
-  Wire.write(0x6A);
+  Wire.write(0x20);
   Wire.endTransmission();
-  delay(25);
+  delay(20);
 
   Wire.beginTransmission(CMPS11_ADDRESS);
   Wire.write(0); //command register
-  Wire.write(0x7C);
+  Wire.write(0x2A);
   Wire.endTransmission();
-  delay(25);
+  delay(20);
 
   Wire.beginTransmission(CMPS11_ADDRESS);
   Wire.write(0); //command register
-  Wire.write(0xb1);
+  Wire.write(0x60);
   Wire.endTransmission();
  
   Serial.println("done");
@@ -180,7 +182,7 @@ void setup() {
   
   Serial.begin(9600);
 
-  Wire.begin(); // I2C library
+  Wire.begin(4, 5); // I2C library
   calibrate_cmps11();
   setup_wifi();
 
@@ -195,7 +197,6 @@ void loop() {
   if (!MQTT.connected()) {
         reconnect(); //se não há conexão com o Broker, a conexão é refeita
   }
-  
   reconectWiFi();
   read_cmps11();
   MQTT.loop();
