@@ -121,7 +121,7 @@ void read_cmps11(){
   angle16 <<= 8;
   angle16 += low_byte;
   
-  int curr_angle = /*(String(int(angle16/10)) + "." +  String(angle16%10)).toFloat();*/ int(angle8) ;
+  int curr_angle = /*(String(int(angle16/10)) + "." +  String(angle16%10)).toFloat();*/ int(angle8);
   int curr_pitch = int(pitch);
   int curr_roll = int(roll);
 
